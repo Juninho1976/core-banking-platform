@@ -19,7 +19,7 @@ focused on a single product: savings accounts.
 - Transaction history
 
 ## Tech Stack
-- Java 25
+- Java 21
 - Spring Boot
 - Docker
 - GitHub Actions
