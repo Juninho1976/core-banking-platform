@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import com.example.banking.auth.api.InvalidCredentialsException;
 
 @RestController
 @RequestMapping("/auth")
@@ -34,4 +35,20 @@ public class AuthController {
 
         return new RegisterResponse(saved.getId(), saved.getEmail());
     }
+
+    @PostMapping("/login")
+    public LoginResponse login(@Valid @RequestBody LoginRequest request) {
+
+        String email = request.email().trim().toLowerCase();
+
+        User user = userRepository.findByEmail(email)
+            .orElseThrow(InvalidCredentialsException::new);
+
+        if (!passwordEncoder.matches(request.password(), user.getPasswordHash())) {
+            throw new InvalidCredentialsException();
+        }   
+
+        return new LoginResponse("Authenticated");
+    }
+
 }
