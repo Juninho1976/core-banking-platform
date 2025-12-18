@@ -7,6 +7,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.example.banking.auth.api.InvalidCredentialsException;
+import com.example.banking.auth.jwt.JwtService;
+import org.springframework.security.core.Authentication;
+
 
 @RestController
 @RequestMapping("/auth")
@@ -14,10 +17,13 @@ public class AuthController {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
-    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+
+    public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtService = jwtService;
     }
 
     @PostMapping("/register")
@@ -48,7 +54,14 @@ public class AuthController {
             throw new InvalidCredentialsException();
         }   
 
-        return new LoginResponse("Authenticated");
+        String token = jwtService.createToken(user.getId(), user.getEmail());
+        return new LoginResponse(token, "Bearer", 3600);
+
+    }
+
+    @GetMapping("/me")
+    public MeResponse me(Authentication auth) {
+        return new MeResponse(auth.getName());
     }
 
 }
