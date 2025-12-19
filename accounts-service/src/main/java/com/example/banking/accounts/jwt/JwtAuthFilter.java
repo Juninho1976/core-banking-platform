@@ -42,7 +42,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 UUID userId = UUID.fromString(claims.getSubject());
                 var auth = new UsernamePasswordAuthenticationToken(userId, null, List.of());
                 SecurityContextHolder.getContext().setAuthentication(auth);
-            } catch (Exception ignored) {}
+            } catch (Exception e) {
+                        System.out.println("JWT parse failed: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                        }
         }
         chain.doFilter(request, response);
     }
