@@ -1,11 +1,29 @@
 services:
+  postgres:
+    image: postgres:16
+    container_name: corebank-postgres
+    environment:
+      POSTGRES_DB: accountsdb
+      POSTGRES_USER: corebank
+      POSTGRES_PASSWORD: corebankpass
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U corebank -d accountsdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
   auth-service:
     image: corebank-auth:dev
     container_name: corebank-auth
     ports:
       - "8080:8080"
     environment:
-      AUTH_JWT_SECRET: this-is-a-dev-secret-change-me-32-chars-minimum!!
+      AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
     restart: unless-stopped
 
   accounts-service:
@@ -15,4 +33,16 @@ services:
       - "8081:8081"
     environment:
       AUTH_JWT_SECRET: ${AUTH_JWT_SECRET}
+
+      # --- Postgres datasource for accounts-service ---
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/accountsdb
+      SPRING_DATASOURCE_USERNAME: corebank
+      SPRING_DATASOURCE_PASSWORD: corebankpass
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    depends_on:
+      postgres:
+        condition: service_healthy
     restart: unless-stopped
+
+volumes:
+  pgdata:
