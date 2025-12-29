@@ -33,6 +33,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             throws ServletException, IOException {
 
         String header = request.getHeader("Authorization");
+        System.out.println("Auth header present? " + (header != null));
+        
         if (header != null && header.startsWith("Bearer ")) {
             try {
                 Claims claims = Jwts.parser().verifyWith(key).build()

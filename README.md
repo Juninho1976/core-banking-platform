@@ -28,13 +28,8 @@ focused on a single product: savings accounts.
 ## Status
 🚧 Work in progress
 
-Updates:
-- 17th December: service bootstrapped, health endpoint live, security baseline configured.
-
-## Roadmap
-- [ ] Authentication service
-- [ ] Account service
-- [ ] Transaction service
-- [ ] CI/CD pipeline
-- [ ] Deployment to GCP
+## Usage
+cp .env.example .env
+docker compose up --build
+cd web-frontend && npm install && npm run dev
 
