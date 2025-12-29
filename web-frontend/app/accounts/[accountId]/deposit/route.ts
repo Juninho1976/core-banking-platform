@@ -9,27 +9,31 @@ export async function POST(
     return NextResponse.json({ error: "Missing Authorization header" }, { status: 401 });
   }
 
-  const idem = req.headers.get("idempotency-key");
-  if (!idem) {
-    return NextResponse.json({ error: "Missing Idempotency-Key header" }, { status: 400 });
+  // Read body as raw text to avoid JSON parse errors when body is empty
+  const bodyText = await req.text();
+  if (!bodyText || bodyText.trim().length === 0) {
+    return NextResponse.json({ error: "Missing request body" }, { status: 400 });
   }
 
-  const body = await req.text(); // pass-through
+  const idempotencyKey = req.headers.get("idempotency-key") ?? `dep-${crypto.randomUUID()}`;
+
   const base = process.env.NEXT_PUBLIC_ACCOUNTS_BASE_URL!;
-  const res = await fetch(`${base}/accounts/${params.accountId}/deposit`, {
+  const upstream = await fetch(`${base}/accounts/${params.accountId}/deposit`, {
     method: "POST",
     headers: {
       Authorization: authHeader,
-      "Idempotency-Key": idem,
       "Content-Type": "application/json",
+      "Idempotency-Key": idempotencyKey,
     },
-    body,
+    body: bodyText,
     cache: "no-store",
   });
 
-  const text = await res.text();
+  const text = await upstream.text(); // could be empty on errors
   return new NextResponse(text, {
-    status: res.status,
-    headers: { "Content-Type": res.headers.get("content-type") ?? "application/json" },
+    status: upstream.status,
+    headers: {
+      "Content-Type": upstream.headers.get("content-type") ?? "application/json",
+    },
   });
 }
